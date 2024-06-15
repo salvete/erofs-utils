@@ -403,6 +403,7 @@ void erofs_put_super(struct erofs_sb_info *sbi);
 int erofs_writesb(struct erofs_sb_info *sbi, struct erofs_buffer_head *sb_bh,
 		  erofs_blk_t *blocks);
 struct erofs_buffer_head *erofs_reserve_sb(struct erofs_sb_info *sbi);
+int erofs_sb_csum_set(struct erofs_sb_info *sbi);
 
 /* namei.c */
 int erofs_read_inode_from_disk(struct erofs_inode *vi);
