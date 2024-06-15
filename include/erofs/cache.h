@@ -53,43 +53,12 @@ struct erofs_buffer_block {
 	struct erofs_buffer_head buffers;
 };
 
-static inline const int get_alignsize(int type, int *type_ret)
-{
-	if (type == DATA)
-		return erofs_blksiz(&sbi);
-
-	if (type == INODE) {
-		*type_ret = META;
-		return sizeof(struct erofs_inode_compact);
-	} else if (type == DIRA) {
-		*type_ret = META;
-		return erofs_blksiz(&sbi);
-	} else if (type == XATTR) {
-		*type_ret = META;
-		return sizeof(struct erofs_xattr_entry);
-	} else if (type == DEVT) {
-		*type_ret = META;
-		return EROFS_DEVT_SLOT_SIZE;
-	}
-
-	if (type == META)
-		return 1;
-	return -EINVAL;
-}
+const int get_alignsize(int type, int *type_ret);
 
 extern const struct erofs_bhops erofs_drop_directly_bhops;
 extern const struct erofs_bhops erofs_skip_write_bhops;
 
-static inline erofs_off_t erofs_btell(struct erofs_buffer_head *bh, bool end)
-{
-	const struct erofs_buffer_block *bb = bh->block;
-
-	if (bb->blkaddr == NULL_ADDR)
-		return NULL_ADDR_UL;
-
-	return erofs_pos(&sbi, bb->blkaddr) +
-		(end ? list_next_entry(bh, list)->off : bh->off);
-}
+erofs_off_t erofs_btell(struct erofs_buffer_head *bh, bool end);
 
 static inline int erofs_bh_flush_generic_end(struct erofs_buffer_head *bh)
 {
@@ -98,7 +67,7 @@ static inline int erofs_bh_flush_generic_end(struct erofs_buffer_head *bh)
 	return 0;
 }
 
-void erofs_buffer_init(erofs_blk_t startblk);
+void erofs_buffer_init(struct erofs_sb_info *sbi, erofs_blk_t startblk);
 int erofs_bh_balloon(struct erofs_buffer_head *bh, erofs_off_t incr);
 
 struct erofs_buffer_head *erofs_balloc(int type, erofs_off_t size,

@@ -202,12 +202,12 @@ int erofs_writesb(struct erofs_sb_info *sbi, struct erofs_buffer_head *sb_bh,
 	return ret;
 }
 
-struct erofs_buffer_head *erofs_reserve_sb(void)
+struct erofs_buffer_head *erofs_reserve_sb(struct erofs_sb_info *sbi)
 {
 	struct erofs_buffer_head *bh;
 	int err;
 
-	erofs_buffer_init(0);
+	erofs_buffer_init(sbi, 0);
 	bh = erofs_balloc(META, 0, 0, 0);
 	if (IS_ERR(bh)) {
 		erofs_err("failed to allocate super: %s", PTR_ERR(bh));

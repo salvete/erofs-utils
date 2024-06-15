@@ -1305,7 +1305,7 @@ int main(int argc, char **argv)
 	}
 
 	if (!incremental_mode) {
-		sb_bh = erofs_reserve_sb();
+		sb_bh = erofs_reserve_sb(&sbi);
 		if (IS_ERR(sb_bh)) {
 			err = PTR_ERR(sb_bh);
 			goto exit;
@@ -1330,7 +1330,7 @@ int main(int argc, char **argv)
 			u.startblk = DIV_ROUND_UP(u.st.st_size, erofs_blksiz(&sbi));
 		else
 			u.startblk = sbi.primarydevice_blocks;
-		erofs_buffer_init(u.startblk);
+		erofs_buffer_init(&sbi, u.startblk);
 		sb_bh = NULL;
 	}
 
