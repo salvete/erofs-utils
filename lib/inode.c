@@ -1534,12 +1534,12 @@ bool erofs_dentry_is_wht(struct erofs_sb_info *sbi, struct erofs_dentry *d)
 }
 
 static int erofs_rebuild_handle_directory(struct erofs_inode *dir,
-					  bool incremental)
+					  bool incremental, bool ovlfs_strip)
 {
 	struct erofs_sb_info *sbi = dir->sbi;
 	struct erofs_dentry *d, *n;
 	unsigned int nr_subdirs, i_nlink;
-	bool delwht = cfg.c_ovlfs_strip && dir->whiteouts;
+	bool delwht = ovlfs_strip && dir->whiteouts;
 	int ret;
 
 	nr_subdirs = 0;
@@ -1624,7 +1624,7 @@ static int erofs_mkfs_handle_inode(struct erofs_inode *inode)
 }
 
 static int erofs_rebuild_handle_inode(struct erofs_inode *inode,
-				      bool incremental)
+				      bool incremental, bool ovlfs_strip)
 {
 	char *trimmed;
 	int ret;
@@ -1653,7 +1653,7 @@ static int erofs_rebuild_handle_inode(struct erofs_inode *inode,
 	}
 
 	/* strip all unnecessary overlayfs xattrs when ovlfs_strip is enabled */
-	if (cfg.c_ovlfs_strip)
+	if (ovlfs_strip)
 		erofs_clear_opaque_xattr(inode);
 	else if (inode->whiteouts)
 		erofs_set_origin_xattr(inode);
@@ -1683,7 +1683,7 @@ static int erofs_rebuild_handle_inode(struct erofs_inode *inode,
 		ret = erofs_mkfs_go(inode->sbi, EROFS_MKFS_JOB_NDIR,
 				    &ctx, sizeof(ctx));
 	} else {
-		ret = erofs_rebuild_handle_directory(inode, incremental);
+		ret = erofs_rebuild_handle_directory(inode, incremental, ovlfs_strip);
 	}
 	erofs_info("file %s dumped (mode %05o)", erofs_fspath(inode->i_srcpath),
 		   inode->i_mode);
@@ -1702,7 +1702,7 @@ static void erofs_mark_parent_inode(struct erofs_inode *inode,
 }
 
 static int erofs_mkfs_dump_tree(struct erofs_inode *root, bool rebuild,
-				bool incremental)
+				bool incremental, bool ovlfs_strip)
 {
 	struct erofs_sb_info *sbi = root->sbi;
 	struct erofs_inode *dumpdir = erofs_igrab(root);
@@ -1721,7 +1721,7 @@ static int erofs_mkfs_dump_tree(struct erofs_inode *root, bool rebuild,
 	}
 
 	err = !rebuild ? erofs_mkfs_handle_inode(root) :
-			erofs_rebuild_handle_inode(root, incremental);
+			erofs_rebuild_handle_inode(root, incremental, ovlfs_strip);
 	if (err)
 		return err;
 
@@ -1756,7 +1756,7 @@ static int erofs_mkfs_dump_tree(struct erofs_inode *root, bool rebuild,
 					err = erofs_mkfs_handle_inode(inode);
 				else
 					err = erofs_rebuild_handle_inode(inode,
-								incremental);
+								incremental, ovlfs_strip);
 				if (err)
 					break;
 				if (S_ISDIR(inode->i_mode)) {
@@ -1786,6 +1786,7 @@ struct erofs_mkfs_buildtree_ctx {
 		struct erofs_inode *root;
 	} u;
 	bool incremental;
+	bool ovlfs_strip;
 };
 #ifndef EROFS_MT_ENABLED
 #define __erofs_mkfs_build_tree erofs_mkfs_build_tree
@@ -1805,7 +1806,7 @@ static int __erofs_mkfs_build_tree(struct erofs_mkfs_buildtree_ctx *ctx)
 		root = ctx->u.root;
 	}
 
-	err = erofs_mkfs_dump_tree(root, !from_path, ctx->incremental);
+	err = erofs_mkfs_dump_tree(root, !from_path, ctx->incremental, ctx->ovlfs_strip);
 	if (err) {
 		if (from_path)
 			erofs_iput(root);
@@ -1877,12 +1878,13 @@ struct erofs_inode *erofs_mkfs_build_tree_from_path(struct erofs_sb_info *sbi,
 	return ctx.u.root;
 }
 
-int erofs_rebuild_dump_tree(struct erofs_inode *root, bool incremental)
+int erofs_rebuild_dump_tree(struct erofs_inode *root, bool incremental, bool  ovlfs_strip)
 {
 	return erofs_mkfs_build_tree(&((struct erofs_mkfs_buildtree_ctx) {
 		.sbi = NULL,
 		.u.root = root,
 		.incremental = incremental,
+		.ovlfs_strip =  ovlfs_strip,
 	}));
 }
 

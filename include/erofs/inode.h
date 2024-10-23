@@ -36,7 +36,7 @@ struct erofs_dentry *erofs_d_alloc(struct erofs_inode *parent,
 				   const char *name);
 int erofs_allocate_inode_bh_data(struct erofs_inode *inode, erofs_blk_t nblocks);
 bool erofs_dentry_is_wht(struct erofs_sb_info *sbi, struct erofs_dentry *d);
-int erofs_rebuild_dump_tree(struct erofs_inode *dir, bool incremental);
+int erofs_rebuild_dump_tree(struct erofs_inode *dir, bool incremental, bool ovlfs_strip);
 int erofs_init_empty_dir(struct erofs_inode *dir);
 int __erofs_fill_inode(struct erofs_inode *inode, struct stat *st,
 		       const char *path);

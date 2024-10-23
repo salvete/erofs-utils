@@ -1382,7 +1382,7 @@ int main(int argc, char **argv)
 		if (err < 0)
 			goto exit;
 
-		err = erofs_rebuild_dump_tree(root, incremental_mode);
+		err = erofs_rebuild_dump_tree(root, incremental_mode, cfg.c_ovlfs_strip);
 		if (err < 0)
 			goto exit;
 	} else if (rebuild_mode) {
@@ -1395,7 +1395,7 @@ int main(int argc, char **argv)
 		err = erofs_mkfs_rebuild_load_trees(root);
 		if (err)
 			goto exit;
-		err = erofs_rebuild_dump_tree(root, incremental_mode);
+		err = erofs_rebuild_dump_tree(root, incremental_mode, cfg.c_ovlfs_strip);
 		if (err)
 			goto exit;
 	} else {
