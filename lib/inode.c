@@ -1758,7 +1758,7 @@ static int erofs_mkfs_dump_tree(struct erofs_inode *root, bool rebuild,
 					err = erofs_rebuild_handle_inode(inode,
 								incremental, ovlfs_strip);
 				if (err)
-					break;
+					return err;
 				if (S_ISDIR(inode->i_mode)) {
 					*last = inode;
 					last = &inode->next_dirwrite;
